@@ -10,7 +10,7 @@
  * and limitations under the License.
  */
 
-package main.java.com.lumingwu;
+package com.lumingwu.immutable.list;
 
 public class ImmutableArrayList<E> {
 
