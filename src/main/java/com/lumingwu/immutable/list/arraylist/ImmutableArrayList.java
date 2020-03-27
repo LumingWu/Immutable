@@ -10,22 +10,179 @@
  * and limitations under the License.
  */
 
-package com.lumingwu.immutable.list;
+package com.lumingwu.immutable.list.arraylist;
 
-public class ImmutableArrayList<E> {
+import com.lumingwu.immutable.list.ImmutableList;
+import com.lumingwu.immutable.list.ImmutableListBatchResult;
+import com.lumingwu.immutable.list.ImmutableListResult;
+import com.lumingwu.immutable.list.ImmutableListStatusResult;
 
-    private int multiplier;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.RandomAccess;
+import java.util.function.UnaryOperator;
+
+public class ImmutableArrayList<E> implements ImmutableList<E>, RandomAccess {
+
+    @Override
+    public ImmutableList<E> add(E item) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> add(int index, E item) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> addAll(Collection<? extends E> collection) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> addAll(int index, Collection<? extends E> collection) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> addAll(ImmutableList<? extends E> immutableList) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> addAll(int index, ImmutableList<? extends E> immutableList) {
+        return null;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
+
+    @Override
+    public int size() {
+        return 0;
+    }
+
+    @Override
+    public E get(int index) {
+        return null;
+    }
+
+    @Override
+    public int indexOf(Object object) {
+        return 0;
+    }
+
+    @Override
+    public boolean contains(Object object) {
+        return false;
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> collection) {
+        return false;
+    }
+
+    @Override
+    public boolean containsAll(ImmutableList<?> immutableList) {
+        return false;
+    }
+
+    @Override
+    public ImmutableListResult<E> set(int index, E element) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListBatchResult<E> set(int index, Collection<E> collection) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListBatchResult<E> set(int index, ImmutableList<E> immutableList) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> replaceAll(UnaryOperator<E> operator) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListStatusResult retainAll(Collection<?> collection) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListStatusResult retainAll(ImmutableList<?> immutableList) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> sort(Comparator<? super E> comparator) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListResult<E> remove(int index) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListBatchResult<E> removeAll(int start, int end) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListStatusResult<E> remove(Object object) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListStatusResult<E> removeAll(Collection<?> collection) {
+        return null;
+    }
+
+    @Override
+    public ImmutableListStatusResult<E> removeAll(ImmutableList<? extends E> immutableList) {
+        return null;
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<E> subList(int fromIndex, int toIndex) {
+        return null;
+    }
+
+    @Override
+    public Object[] toArray() {
+        return new Object[0];
+    }
+
+    @Override
+    public <T> T[] toArray(T[] array) {
+        return null;
+    }
+
+    /*
+    private int branchFactor;
     private int capacity;
     private int size;
     private Object[] list;
 
     public ImmutableArrayList(int multiplier) {
         this(multiplier,multiplier,0);
-        this.multiplier = multiplier;
+        this.branchFactor = multiplier;
     }
 
     private ImmutableArrayList(ImmutableArrayList<E> immutableArrayList, int newSize) {
-        this(immutableArrayList.multiplier, immutableArrayList.capacity, newSize);
+        this(immutableArrayList.branchFactor, immutableArrayList.capacity, newSize);
         list = immutableArrayList.list.clone();
     }
 
@@ -33,12 +190,13 @@ public class ImmutableArrayList<E> {
         if(multiplier < 2) {
             throw new IllegalArgumentException("Multiplier must be at least 2");
         }
-        this.multiplier = multiplier;
+        this.branchFactor = multiplier;
         this.capacity = capacity;
         this.size = size;
 
         list = new Object[multiplier];
     }
+    */
 
     /**
      * Create a new ImmutableArrayList that added zero or more {@items} starting at {@index}. All original items starting at
@@ -51,6 +209,7 @@ public class ImmutableArrayList<E> {
      *
      * @throws IndexOutOfBoundsException if the index is out of range (index < 0 || index > size())
      */
+    /*
     public ImmutableArrayList<E> add(int index, E... items) {
         if(index < 0 || index > size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -66,13 +225,13 @@ public class ImmutableArrayList<E> {
 
         while(itemIndex < itemsLength) {
             if(searchList.size < searchList.capacity) {
-                while(index >= multiplier) {
-                    int nextSearchListCapacity = searchList.capacity / multiplier;
+                while(index >= branchFactor) {
+                    int nextSearchListCapacity = searchList.capacity / branchFactor;
                     int nextSearchListIndex = index / nextSearchListCapacity;
                     int padding = nextSearchListIndex * nextSearchListCapacity;
                     ImmutableArrayList<E> nextSearchList = (ImmutableArrayList<E>) searchList.list[nextSearchListIndex];
                     if (nextSearchList == null) {
-                        nextSearchList = new ImmutableArrayList<E>(multiplier, nextSearchListCapacity, Math.min(toAddSize, nextSearchListCapacity));
+                        nextSearchList = new ImmutableArrayList<E>(branchFactor, nextSearchListCapacity, Math.min(toAddSize, nextSearchListCapacity));
                     } else {
                         nextSearchList = new ImmutableArrayList<E>(nextSearchList, Math.min(nextSearchList.size + toAddSize, nextSearchList.capacity));
                     }
@@ -102,21 +261,21 @@ public class ImmutableArrayList<E> {
                 index += iterateValue.padding;
             }
             if(searchList.size == searchList.capacity) {
-                int expandListCapacity = searchList.capacity * multiplier;
-                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(multiplier, expandListCapacity, Math.min(searchList.size + toAddSize, expandListCapacity));
+                int expandListCapacity = searchList.capacity * branchFactor;
+                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(branchFactor, expandListCapacity, Math.min(searchList.size + toAddSize, expandListCapacity));
                 expandList.list[0] = searchList;
                 searchList = expandList;
             }
         }
         while(toAddSize > 0) {
             if(searchList.size < searchList.capacity) {
-                while(index >= multiplier) {
-                    int nextSearchListCapacity = searchList.capacity / multiplier;
+                while(index >= branchFactor) {
+                    int nextSearchListCapacity = searchList.capacity / branchFactor;
                     int nextSearchListIndex = index / nextSearchListCapacity;
                     int padding = nextSearchListIndex * nextSearchListCapacity;
                     ImmutableArrayList<E> nextSearchList = (ImmutableArrayList<E>) searchList.list[nextSearchListIndex];
                     if (nextSearchList == null) {
-                        nextSearchList = new ImmutableArrayList<E>(multiplier, nextSearchListCapacity, Math.min(toAddSize, nextSearchListCapacity));
+                        nextSearchList = new ImmutableArrayList<E>(branchFactor, nextSearchListCapacity, Math.min(toAddSize, nextSearchListCapacity));
                     } else {
                         nextSearchList = new ImmutableArrayList<E>(nextSearchList, Math.min(nextSearchList.size + toAddSize, nextSearchList.capacity));
                     }
@@ -144,8 +303,8 @@ public class ImmutableArrayList<E> {
                 index += iterateValue.padding;
             }
             if(searchList.size == searchList.capacity) {
-                int expandListCapacity = searchList.capacity * multiplier;
-                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(multiplier, expandListCapacity, Math.min(searchList.size + toAddSize, expandListCapacity));
+                int expandListCapacity = searchList.capacity * branchFactor;
+                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(branchFactor, expandListCapacity, Math.min(searchList.size + toAddSize, expandListCapacity));
                 expandList.list[0] = searchList;
                 searchList = expandList;
             }
@@ -161,8 +320,8 @@ public class ImmutableArrayList<E> {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
         ImmutableArrayList<E> searchList = this;
-        while(index > multiplier) {
-            int nextSearchListCapacity = searchList.capacity / multiplier;
+        while(index > branchFactor) {
+            int nextSearchListCapacity = searchList.capacity / branchFactor;
             int nextSearchListIndex = index / nextSearchListCapacity;
             searchList = (ImmutableArrayList<E>)searchList.list[nextSearchListIndex];
             index = index - nextSearchListIndex * nextSearchListCapacity;
@@ -181,5 +340,6 @@ public class ImmutableArrayList<E> {
     public E remove(int index) {
         return null;
     }
+    */
 
 }
