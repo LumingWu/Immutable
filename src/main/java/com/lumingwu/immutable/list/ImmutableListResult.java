@@ -12,19 +12,10 @@
 
 package com.lumingwu.immutable.list;
 
-/**
- * BacktrackValues -    A simple wrapper data structure that contains backtrack values for ImmutableArrayList search operation.
- *
- * @param <E>
- */
-class BacktrackValues<E> {
+public class ImmutableListResult<E> {
 
-    public ImmutableArrayList<E> list;
-    public int padding;
+    public ImmutableList<E> immutableList;
 
-    public BacktrackValues(ImmutableArrayList<E> list, int padding) {
-        this.list = list;
-        this.padding = padding;
-    }
+    public E item;
 
 }

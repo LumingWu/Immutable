@@ -15,11 +15,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 		 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.lumingwu.immutable.list</groupId>
-    <artifactId>immutable-list</artifactId>
+    <groupId>com.lumingwu.immutable</groupId>
+    <artifactId>immutable</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>immutable-list</name>
+    <name>immutable</name>
     <url>http://maven.apache.org</url>
 
     <properties>

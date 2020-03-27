@@ -10,7 +10,7 @@
  * and limitations under the License.
  */
 
-package com.lumingwu.immutable.list;
+package com.lumingwu.immutable.list.arraylist;
 
 /**
  * Stack -  A simple dedicated singly-linked Stack for ImmutableArrayList search operation.
