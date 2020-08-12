@@ -39,6 +39,7 @@ public interface ImmutableList<E> extends Iterable<E> {
 
     public int indexOf(Object object);
 
+    /*
     public boolean contains(Object object);
 
     public boolean containsAll(Collection<?> collection);
@@ -76,6 +77,8 @@ public interface ImmutableList<E> extends Iterable<E> {
     public Object[] toArray();
 
     public <T> T[] toArray(T[] array);
+
+     */
 
     public boolean equals(Object o);
 
