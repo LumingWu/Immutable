@@ -23,13 +23,9 @@ public interface ImmutableList<E> extends Iterable<E> {
 
     public ImmutableList<E> add(int index, E item);
 
-    public ImmutableList<E> addAll(Collection<? extends E> collection);
+    public ImmutableList<E> addAll(Iterable<? extends E> collection);
 
-    public ImmutableList<E> addAll(int index, Collection<? extends E> collection);
-
-    public ImmutableList<E> addAll(ImmutableList<? extends E> immutableList);
-
-    public ImmutableList<E> addAll(int index, ImmutableList<? extends E> immutableList);
+    public ImmutableList<E> addAll(int index, Iterable<? extends E> collection);
 
     public boolean isEmpty();
 
