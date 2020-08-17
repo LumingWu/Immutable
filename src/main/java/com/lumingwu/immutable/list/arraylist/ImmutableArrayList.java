@@ -13,12 +13,8 @@
 package com.lumingwu.immutable.list.arraylist;
 
 import com.lumingwu.immutable.list.ImmutableList;
-import com.lumingwu.immutable.list.ImmutableListBatchResult;
-import com.lumingwu.immutable.list.ImmutableListResult;
-import com.lumingwu.immutable.list.ImmutableListStatusResult;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 public class ImmutableArrayList<E> implements ImmutableList<E>, RandomAccess {
 
@@ -27,9 +23,21 @@ public class ImmutableArrayList<E> implements ImmutableList<E>, RandomAccess {
     private int size;
     private Object[] list;
 
+    /**
+     * Create a new empty ImmutableArrayList that has the capacity of 2^6. With the default {@code branchFactor} of 6.0
+     */
+    public ImmutableArrayList() {
+        this(6);
+    }
+
+    /**
+     * Create a new empty ImmutableArrayList that has the capacity of 2^{@code branchFactor}.
+     * @param branchFactor - The branch factor is an integer between 1 and 29 inclusively that represents the number of
+     *                     positions for bitwise shifting. It is used for determining the size of all template lists of
+     *                     the {@code ImmutableArrayList<E>}, which is 2^{@code branchFactor}.
+     */
     public ImmutableArrayList(int branchFactor) {
-        this(branchFactor, (int)Math.pow(2, branchFactor), 0);
-        this.branchFactor = branchFactor;
+        this(branchFactor, 1 << branchFactor, 0);
     }
 
     private ImmutableArrayList(ImmutableArrayList<E> immutableArrayList, int newSize) {
@@ -53,33 +61,116 @@ public class ImmutableArrayList<E> implements ImmutableList<E>, RandomAccess {
     }
 
     @Override
-    public ImmutableList<E> add(E item) {
-        return null;
+    public ImmutableArrayList<E> add(E item) {
+        return addAll(this.size, Arrays.asList(item));
     }
 
     @Override
-    public ImmutableList<E> add(int index, E item) {
-        return null;
+    public ImmutableArrayList<E> add(int index, E item) {
+        return addAll(index, Arrays.asList(item));
     }
 
     @Override
-    public ImmutableList<E> addAll(Collection<? extends E> collection) {
-        return null;
+    public ImmutableArrayList<E> addAll(Iterable<? extends E> collection) {
+        return addAll(this.size, collection);
     }
 
+    /**
+     * Create a new ImmutableArrayList that added zero or more {@items} starting at {@index}. All original items starting at
+     * {@index} will shift right to make space.
+     *
+     * @param index - index at which the specified element is to be inserted
+     * @param collection - a collection of items to be added at the index
+     *
+     * @return a reference of the new ImmutableArrayList represents the new state after the operation
+     *
+     * @throws IndexOutOfBoundsException if the index is out of range index < 0 or index > size
+     */
     @Override
-    public ImmutableList<E> addAll(int index, Collection<? extends E> collection) {
-        return null;
+    public ImmutableArrayList<E> addAll(int index, Iterable<? extends E> collection) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        }
+
+        Iterator<?> collectionIterator = collection.iterator();
+        Deque<E> shiftItemStack = new LinkedList<E>();
+
+        ImmutableArrayList<E> searchList = new ImmutableArrayList(this, size);
+        Deque<ImmutableArrayList<E>> searchListStack = new LinkedList<ImmutableArrayList<E>>();
+        searchListStack.push(searchList);
+        Deque<Integer> paddingStack = new LinkedList<Integer>();
+        paddingStack.push(0);
+        Deque<Integer> sizeIncrementStack = new LinkedList<Integer>();
+        sizeIncrementStack.push(0);
+        while (collectionIterator.hasNext()) {
+            if(index <= searchList.size) {
+                while (index >= searchList.capacity) {
+                    int nextSearchListCapacity = searchList.capacity >> branchFactor;
+                    int nextSearchListIndex = index / nextSearchListCapacity;
+
+                    ImmutableArrayList<E> nextSearchList = (ImmutableArrayList<E>) searchList.list[nextSearchListIndex];
+                    if (nextSearchList == null) {
+                        nextSearchList = new ImmutableArrayList<E>(branchFactor, nextSearchListCapacity, 0);
+                    } else {
+                        nextSearchList = new ImmutableArrayList<E>(nextSearchList, nextSearchList.size);
+                    }
+
+                    searchList = nextSearchList;
+                    searchListStack.push(searchList);
+                    int padding = nextSearchListIndex * nextSearchListCapacity;
+                    index -= padding;
+                    paddingStack.push(padding);
+                    sizeIncrementStack.push(0);
+                }
+                while (collectionIterator.hasNext() && index < searchList.size) {
+                    shiftItemStack.addFirst((E) searchList.list[index]);
+                    searchList.list[index] = collectionIterator.next();
+                    index++;
+                }
+                while (collectionIterator.hasNext() && index < searchList.capacity) {
+                    searchList.list[index] = collectionIterator.next();
+                    sizeIncrementStack.push(sizeIncrementStack.pop() + 1);
+                    index++;
+                }
+            }
+
+            if (!collectionIterator.hasNext()) {
+                if(shiftItemStack.isEmpty()) {
+                    break;
+                }
+                collectionIterator = shiftItemStack.iterator();
+                shiftItemStack.clear();
+            }
+
+            while (!searchListStack.isEmpty() && searchList.size == searchList.capacity) {
+                searchList = backtrackSizeIncrement(searchListStack, sizeIncrementStack);
+                index += paddingStack.pop();
+            }
+
+            if (searchList.size == searchList.capacity) {
+                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(branchFactor, searchList.capacity << branchFactor, searchList.size);
+                expandList.list[0] = searchList;
+                searchList = expandList;
+            }
+        }
+
+        while(!searchListStack.isEmpty()) {
+            searchList = backtrackSizeIncrement(searchListStack, sizeIncrementStack);
+        }
+
+        return searchList;
     }
 
-    @Override
-    public ImmutableList<E> addAll(ImmutableList<? extends E> immutableList) {
-        return null;
-    }
+    private ImmutableArrayList<E> backtrackSizeIncrement(Deque<ImmutableArrayList<E>> listStack, Deque<Integer> sizeIncrementStack) {
+        ImmutableArrayList<E> previousList = listStack.pop();
 
-    @Override
-    public ImmutableList<E> addAll(int index, ImmutableList<? extends E> immutableList) {
-        return null;
+        int sizeIncrement = sizeIncrementStack.pop();
+        if(!sizeIncrementStack.isEmpty()) {
+            sizeIncrementStack.push(sizeIncrementStack.pop() + sizeIncrement);
+        }
+        previousList.size += sizeIncrement;
+
+        return previousList;
     }
 
     @Override
@@ -112,115 +203,17 @@ public class ImmutableArrayList<E> implements ImmutableList<E>, RandomAccess {
         return 0;
     }
 
-    /**
-     * Create a new ImmutableArrayList that added zero or more {@items} starting at {@index}. All original items starting at
-     * {@index} will shift right to make space.
-     *
-     * @param index - index at which the specified element is to be inserted
-     * @param collection - a collection of items to be added at the index
-     *
-     * @return a reference of the new ImmutableArrayList represents the new state after the operation
-     *
-     * @throws IndexOutOfBoundsException if the index is out of range (index < 0 || index > size())
-     */
-    public ImmutableArrayList<E> add(int index, Collection<? extends E> collection) {
-        if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-        }
-
-        Iterator<?> collectionIterator = collection.iterator();
-        Deque<E> shiftItemStack = new LinkedList<E>();
-
-        ImmutableArrayList<E> searchList = new ImmutableArrayList(this, size);
-        Deque<ImmutableArrayList<E>> searchListStack = new LinkedList<ImmutableArrayList<E>>();
-        Deque<Integer> paddingStack = new LinkedList<Integer>();
-        Deque<Integer> sizeIncrementStack = new LinkedList<Integer>();
-        while (collectionIterator.hasNext()) {
-            if(index < searchList.size) {
-                while (index >= searchList.capacity) {
-                    int nextSearchListCapacity = searchList.capacity >> branchFactor;
-                    int nextSearchListIndex = index / nextSearchListCapacity;
-
-                    ImmutableArrayList<E> nextSearchList = (ImmutableArrayList<E>) searchList.list[nextSearchListIndex];
-                    if (nextSearchList == null) {
-                        nextSearchList = new ImmutableArrayList<E>(branchFactor, nextSearchListCapacity, 0);
-                    } else {
-                        nextSearchList = new ImmutableArrayList<E>(nextSearchList, nextSearchList.size);
-                    }
-
-                    int padding = nextSearchListIndex * nextSearchListCapacity;
-                    index -= padding;
-                    paddingStack.push(padding);
-                    searchListStack.push(searchList);
-                    sizeIncrementStack.push(0);
-
-                    searchList = nextSearchList;
-                }
-                while (collectionIterator.hasNext() && index < searchList.size) {
-                    shiftItemStack.addFirst((E) searchList.list[index]);
-                    searchList.list[index] = collectionIterator.next();
-                    index++;
-                }
-                while (collectionIterator.hasNext() && index < searchList.capacity) {
-                    searchList.list[index] = collectionIterator.next();
-                    size++;
-                    sizeIncrementStack.push(sizeIncrementStack.pop() + 1);
-                    index++;
-                }
-            }
-
-            if (!collectionIterator.hasNext()) {
-                if(shiftItemStack.isEmpty()) {
-                    break;
-                }
-                collectionIterator = shiftItemStack.iterator();
-                shiftItemStack.clear();
-            }
-
-            while (!searchListStack.isEmpty() && searchList.size == searchList.capacity) {
-                searchList = searchListStack.pop();
-                index += paddingStack.pop();
-                int sizeIncrement = sizeIncrementStack.pop();
-                sizeIncrementStack.push(sizeIncrementStack.pop() + sizeIncrement);
-                searchList.size += sizeIncrement;
-            }
-
-            if (searchList.size == searchList.capacity) {
-                ImmutableArrayList<E> expandList = new ImmutableArrayList<E>(branchFactor, searchList.capacity << branchFactor, searchList.size);
-                expandList.list[0] = searchList;
-                searchList = expandList;
-            }
-        }
-
-        // TODO: Pop the search stack to update size.
-
-        return searchList;
-    }
-
-    private void addAllIterable(Iterator<? extends E> toAddIterable) {
-
-    }
-
-    private void getToSublist(Stack<BacktrackValues<E>> searchStack, ImmutableArrayList<E> searchList) {
-        while(index >= searchList.capacity) {
-            int nextSearchListCapacity = searchList.capacity >> branchFactor;
-            int nextSearchListIndex = index / nextSearchListCapacity;
-            int backtrackPadding = nextSearchListIndex * nextSearchListCapacity;
-            index -= backtrackPadding;
-            searchStack.push(new BacktrackValues<E>(searchList, backtrackPadding));
-
-            ImmutableArrayList<E> nextSearchList = (ImmutableArrayList<E>) searchList.list[nextSearchListIndex];
-            if (nextSearchList == null) {
-                searchList = new ImmutableArrayList<E>(branchFactor, nextSearchListCapacity, Math.min(toAddSize, nextSearchListCapacity));
-            } else {
-                searchList = new ImmutableArrayList<E>(nextSearchList, Math.min(nextSearchList.size + toAddSize, nextSearchList.capacity));
-            }
-        }
-    }
-
     @Override
     public Iterator<E> iterator() {
         return null;
+    }
+
+    public int getBranchFactor() {
+        return branchFactor;
+    }
+
+    public int getCapacity() {
+        return capacity;
     }
 
 }
